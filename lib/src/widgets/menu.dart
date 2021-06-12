@@ -10,7 +10,8 @@ import 'package:velocity_x/velocity_x.dart';
 enum MenuItemViewType {
   Grid,
   Tile,
-  Block,
+  BlockTile,
+  BlockGrid,
 }
 
 extension MenuItemViewTypeExt on MenuItemViewType {
@@ -32,13 +33,15 @@ extension MenuItemViewTypeExt on MenuItemViewType {
       Color background,
     )>{
 
-      MenuItemViewType.Grid: (key, title, subtitle, leading, trailing, onTap, background) => <Widget>[
-        leading,
-        title,
-        subtitle,
-        trailing,
-      ].filter((e) => e!=null).toList().vStack(crossAlignment: CrossAxisAlignment.center)
-        .box.color(background).make().onInkTap(onTap ?? () {}),
+      MenuItemViewType.Grid: (key, title, subtitle, leading, trailing, onTap, background) => 
+        [
+          leading,
+          title,
+          subtitle,
+          // trailing,
+        ].filter((e) => e!=null).toList()
+          .vStack(axisSize: MainAxisSize.min, crossAlignment: CrossAxisAlignment.center)
+          .box.p8.make().onInkTap(onTap ?? () { }),
       
       MenuItemViewType.Tile: (key, title, subtitle, leading, trailing, onTap, background) => ListTile(
         leading: leading,
@@ -50,21 +53,34 @@ extension MenuItemViewTypeExt on MenuItemViewType {
       ).box.color(background).make(),
 
       // just use for block group
-      MenuItemViewType.Block: (key, title, subtitle, leading, trailing, onTap, background) => [
+      MenuItemViewType.BlockTile: (key, title, subtitle, leading, trailing, onTap, background) => [
         // title             trailing
         // leading  leading  leading
         // subtitle
 
-        // title       
-        // leading
-        [title, trailing].filter((e) => e!=null).toList().hStack(
+        (title!=null||trailing!=null)
+        ? [title, trailing].filter((e) => e!=null).toList().hStack(
           axisSize: MainAxisSize.max,
           alignment: MainAxisAlignment.spaceBetween,
-        ).p8(),
+        ).p8()
+        : null,
         leading?.box?.color(background)?.make(),
         subtitle?.p8(),
       ].filter((e) => e!=null).toList()
-        .vStack(crossAlignment: CrossAxisAlignment.start).box.margin(EdgeInsets.only(bottom: 20)).make()
+        .vStack(crossAlignment: CrossAxisAlignment.start).box.make(),
+
+      MenuItemViewType.BlockGrid: (key, title, subtitle, leading, trailing, onTap, background) => <Widget>[
+        // title          trailing
+        // leading leading leading
+        (title!=null||trailing!=null)
+        ? [title, trailing].filter((e) => e!=null).toList().hStack(
+          axisSize: MainAxisSize.max,
+          alignment: MainAxisAlignment.spaceBetween,
+        ).p16()
+        : null,
+        leading,
+      ].filter((e) => e!=null).toList()
+        .vStack(axisSize: MainAxisSize.min).box.color(background).margin(EdgeInsets.all(10)).rounded.make(),
     };
 
     return builders[this]?.call(
@@ -148,29 +164,63 @@ enum MenuGroupViewType {
 
 extension MenuGroupViewTypeExt on MenuGroupViewType {
 
-  // different itemViewType cause -->
+  Widget build(
+    Menu item, List<Menu> items,
+    Widget separator, bool separated,
+    int gridCrossAxisCount, double gridHeight,
+    double gridChildAspectRatio,
+  ) {
 
-  Widget build(Menu item, List<Menu> items) {
+    final builders = <MenuGroupViewType, Widget Function(
+      Menu item, List<Menu> items,
+      Widget separator, bool separated,
+      int gridCrossAxisCount, double gridHeight,
+      double gridChildAspectRatio,
+    )> {
+      MenuGroupViewType.Block: (
+        Menu item, List<Menu> items,
+        Widget separator, bool separated,
+        int gridCrossAxisCount, double gridHeight,
+        double gridChildAspectRatio,
+      ) {
+        bool isGrid = item.itemType == MenuItemViewType.Grid;
+        return item.withType(!isGrid ? MenuItemViewType.BlockTile : MenuItemViewType.BlockGrid) // or block grid
+          .withLeading(items.make(
+            separated: separated,
+            separator: separator,
+            grided: isGrid, gridCrossAxisCount: gridCrossAxisCount, gridHeight: gridHeight,
+            gridChildAspectRatio: gridChildAspectRatio,
+          )).make();
+      },
 
-    final builders = <MenuGroupViewType, Widget Function(Menu item, List<Menu> items)> {
-      MenuGroupViewType.Block: (Menu item, List<Menu> items) => 
-        item.withType(MenuItemViewType.Block)
-          .withLeading(items.make(separated: item.separated, separator: item.separator))
-          .make(),
-
-      MenuGroupViewType.Page: (Menu item, List<Menu> items) =>
-        item.withExpended(true)
+      MenuGroupViewType.Page: (
+        Menu item, List<Menu> items,
+        Widget separator, bool separated,
+        int gridCrossAxisCount, double gridHeight,
+        double gridChildAspectRatio,
+      ) {
+        bool isGrid = item.itemType == MenuItemViewType.Grid;
+        return item.withExpended(true)
           .withOnTapWithContext(
             (context) => 
               Navigator.of(context).push(
                 CupertinoPageRoute(
-                  builder: (context) => items.make(
-                      separated: item.separated, separator: item.separator,
+                  builder: (context) => 
+                    items.make(
+                      separated: separated, separator: separator,
+                      grided: isGrid, gridCrossAxisCount: gridCrossAxisCount, gridHeight: gridHeight,
+                      gridChildAspectRatio: gridChildAspectRatio,
                     ).page(title: item.title))))
-          .make(),
+          .make();
+      },
     };
 
-    return builders[this]?.call(item, items);
+    return builders[this]?.call(
+      item, items,
+      separator, separated,
+      gridCrossAxisCount, gridHeight,
+      gridChildAspectRatio,
+    );
   }
 
 }
@@ -182,18 +232,36 @@ class MenuGroupView extends StatelessWidget {
   final Menu item;
   final List<Menu> items;
 
-  const MenuGroupView({
+  final bool separated;
+  final Widget separator;
+
+  final bool grided;
+  final int gridCrossAxisCount;
+  final double gridHeight;
+  final double gridChildAspectRatio;
+
+  MenuGroupView({
     Key key,
     this.type = MenuGroupViewType.Page,
     // this.itemType,
 
     this.item,
-    this.items,
+    this.items = const [],
+    this.separated = false,
+    this.separator,
 
+    this.grided = false,
+    this.gridCrossAxisCount = 3,
+    this.gridHeight = 120,
+    this.gridChildAspectRatio = 1,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return type.build(item, items);
+    return type.build(
+      item, 
+      items.map((e) => 
+        e.withType(item.itemType).withBackground(item.background)).toList(),
+      separator, separated, gridCrossAxisCount, gridHeight, gridChildAspectRatio);
   }
 }

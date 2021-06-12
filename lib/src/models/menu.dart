@@ -32,10 +32,13 @@ class Menu {
 
   bool expended;
 
-  bool separated = false;
+  bool separated;
   Widget separator;
 
-  // .group(items)
+  bool grided = false;
+  int gridCrossAxisCount;
+  double gridHeight;
+  double gridChildAspectRatio;
 
   Menu({
     this.icon, this.background, this.primary,
@@ -45,7 +48,13 @@ class Menu {
     this.route, this.to, this.href, this.onTap, this.onTapWithContext,
     this.itemType = MenuItemViewType.Tile, this.groupType,
     this.expended = false,
-    this.separated = false, this.separator,
+
+    this.separated = false,
+    this.separator,
+
+    this.grided = false,
+    this.gridCrossAxisCount = 3,
+    this.gridHeight = 120,
   });
 
   bool get _needExpand => to != null || route != null || href != null || expended;
@@ -102,7 +111,8 @@ class Menu {
 
   // only one method can be called
   Widget make() {
-    if (items != null) items.map((e) => e.withBackground(background).withType(itemType));
+    // if (items != null) items.map((e) 
+    //   => e.withBackground(background).withType(itemType));
   
     // is group or basic
     return items == null
@@ -111,10 +121,10 @@ class Menu {
         leading: leading != null ? leading : icon != null ? Icon(icon, color: primary) : null,
         title: mustWidget(title),
         subtitle: mustWidget(description),
-        trailing: trailing != null ? trailing : [
+        trailing: trailing != null ? trailing : (value!=null||_needExpand) ? [
           value != null ? "$value".text.make() : null,
           _needExpand ? Icon(Icons.chevron_right) : null
-        ].filter((e) => e!=null).toList().hStack(),
+        ].filter((e) => e!=null).toList().hStack() : null,
         to: to, route: route, href: href, onTap: onTap, onTapWithContext: onTapWithContext,
         primary: primary, background: background,
       )
@@ -126,8 +136,13 @@ class Menu {
             description: description, value: value,
             background: background, primary: primary,
             itemType: itemType,
-          ), // use menu copy
+          ), // TODO: use menu copy
           items: items,
+          separated: separated,
+          separator: separator,
+          gridCrossAxisCount: gridCrossAxisCount,
+          gridHeight: gridHeight,
+          gridChildAspectRatio: gridChildAspectRatio,
       );
   }
 }
