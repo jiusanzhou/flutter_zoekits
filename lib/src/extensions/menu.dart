@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:flutter_zoekits/flutter_zoekits.dart';
 
-var _separator = VxBox().height(1).color(Colors.grey[200]).px16.make();
+var _separator = VxBox().height(1).color(Colors.grey[200]).margin(EdgeInsets.only(left: 20, right: 20)).make();
 
 extension MenusExtension on Iterable<Menu> {
 
