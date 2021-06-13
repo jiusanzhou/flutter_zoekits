@@ -9,6 +9,8 @@ export './src/widgets/bottomsheet.dart';
 export './src/widgets/snackbar.dart';
 export './src/widgets/logo.dart';
 export './src/widgets/menu.dart';
+export './src/widgets/utils.dart';
+export './src/widgets/input_field.dart';
 
 export './src/views/splash/splash.dart';
 export './src/views/about/about.dart';

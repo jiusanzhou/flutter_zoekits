@@ -11,9 +11,10 @@ class Menu {
   dynamic description;
   dynamic value;
 
+  InputFieldOptions opts;
+
   Widget leading;
   Widget trailing;
-
 
   Iterable<Menu> items;
 
@@ -42,7 +43,7 @@ class Menu {
 
   Menu({
     this.icon, this.background, this.primary,
-    this.title, this.description, this.value,
+    this.title, this.description, this.value, this.opts,
     this.leading, this.trailing,
     this.items,
     this.route, this.to, this.href, this.onTap, this.onTapWithContext,
@@ -122,7 +123,7 @@ class Menu {
         title: mustWidget(title),
         subtitle: mustWidget(description),
         trailing: trailing != null ? trailing : (value!=null||_needExpand) ? [
-          value != null ? "$value".text.make() : null,
+          value != null ? mustWidgetOrInputField(value, opts) : null,
           _needExpand ? Icon(Icons.chevron_right) : null
         ].filter((e) => e!=null).toList().hStack() : null,
         to: to, route: route, href: href, onTap: onTap, onTapWithContext: onTapWithContext,
