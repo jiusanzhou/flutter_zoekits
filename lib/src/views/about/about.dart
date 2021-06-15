@@ -1,7 +1,9 @@
 
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zoekits/flutter_zoekits.dart';
+import 'package:flutter_zoekits/src/widgets/webview.dart';
 // import 'package:flutter_zoekits/src/models/urlpair.dart';
 // import 'package:flutter_zoekits/src/utils/intersperse.dart';
 // import 'package:flutter_zoekits/src/widgets/logo.dart';
@@ -57,8 +59,12 @@ class AboutView extends StatelessWidget {
 
       // links
       links.map((e) => "${e.label}".text.gray500.size(8).underline.make().onTap(() {
-          // TODO: open the url in webview
-          VxToast.show(context, msg: "Open the url: ${e.url}");
+          Navigator.of(context).push(
+            // CupertinoPageRoute
+            MaterialPageRoute(
+              builder: (context) => ZWebviewPage(url: e.url, title: e.label, replaceTitle: false),
+            ),
+          );
       }).box.make()).sperse("•".text.gray500.size(8).make().px4()).toList().hStack().py8(),
     ].vStack().p8();
   }
